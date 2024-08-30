@@ -1,4 +1,4 @@
-AC_INIT(rpcbind, 1.2.6)
+AC_INIT(rpcbind, 1.2.7)
  
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/rpcbind.c])
