@@ -32,8 +32,8 @@ AC_ARG_ENABLE([rmtcalls],
 AM_CONDITIONAL(RMTCALLS, test x$enable_rmtcalls = xyes)
 
 AC_ARG_WITH([statedir],
-  AS_HELP_STRING([--with-statedir=ARG], [use ARG as state dir @<:@default=/var/run/rpcbind@:>@])
-  ,, [with_statedir=/var/run/rpcbind])
+  AS_HELP_STRING([--with-statedir=ARG], [use ARG as state dir @<:@default=/run/rpcbind@:>@])
+  ,, [with_statedir=/run/rpcbind])
 AC_SUBST([statedir], [$with_statedir])
 
 AC_ARG_WITH([rpcuser],

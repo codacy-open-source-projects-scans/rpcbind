@@ -150,6 +150,14 @@ starts up. The state file is created when
 .Nm
 terminates.
 .El
+.Sh FILES
+The
+.Nm
+utility tries to load configuration file in following order:
+.Bd -literal
+.Pa /etc/rpcbind.conf
+.Pa /etc/default/rpcbind
+.Pa /etc/sysconfig/rpcbind
 .Sh NOTES
 All RPC servers must be restarted if
 .Nm
