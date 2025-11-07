@@ -11,7 +11,7 @@
 .Nd universal addresses to RPC program number mapper
 .Sh SYNOPSIS
 .Nm
-.Op Fl adhiLls
+.Op Fl adfhilsvw
 .Sh DESCRIPTION
 The
 .Nm
@@ -141,6 +141,10 @@ to use non-privileged ports for outgoing connections, preventing non-privileged
 clients from using
 .Nm
 to connect to services from a privileged port.
+.It Fl v
+Print
+.Nm
+version and builtin configuration and exit.
 .It Fl w
 Cause
 .Nm

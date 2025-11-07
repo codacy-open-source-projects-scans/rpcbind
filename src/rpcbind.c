@@ -96,10 +96,11 @@ char *rpcbinduser = RPCBIND_USER;
 char *rpcbinduser = NULL;
 #endif
 
+#define NSS_MODULES_DEFAULT "files"
 #ifdef NSS_MODULES
 char *nss_modules = NSS_MODULES;
 #else
-char *nss_modules = "files";
+char *nss_modules = NSS_MODULES_DEFAULT;
 #endif
 
 /* who to suid to if -s is given */
@@ -142,6 +143,76 @@ static void rbllist_add(rpcprog_t, rpcvers_t, struct netconfig *,
 			     struct netbuf *);
 static void terminate(int);
 static void parseargs(int, char *[]);
+
+static void version()
+{
+	fprintf(stderr, "%s\n", PACKAGE_STRING);
+
+	fprintf(stderr, "debug: ");
+#ifdef RPCBIND_DEBUG
+	fprintf(stderr, "yes");
+#else
+	fprintf(stderr, "no");
+#endif
+
+	fprintf(stderr, ", libset debug: ");
+#ifdef LIB_SET_DEBUG
+	fprintf(stderr, "yes");
+#else
+	fprintf(stderr, "no");
+#endif
+
+	fprintf(stderr, ", libwrap: ");
+#ifdef LIBWRAP
+	fprintf(stderr, "yes");
+#else
+	fprintf(stderr, "no");
+#endif
+
+	fprintf(stderr, ", nss modules: ");
+#ifdef NSS_MODULES
+	fprintf(stderr, "%s", NSS_MODULES);
+#else
+	fprintf(stderr, "%s", NSS_MODULES_DEFAULT);
+#endif
+
+	fprintf(stderr, ", remote calls: ");
+#ifdef RMTCALLS
+	fprintf(stderr, "yes");
+#else
+	fprintf(stderr, "no");
+#endif
+
+	fprintf(stderr, ", statedir: ");
+#ifdef RPCBIND_STATEDIR
+	fprintf(stderr, "%s", RPCBIND_STATEDIR);
+#else
+	fprintf(stderr, "");
+#endif
+
+	fprintf(stderr, ", systemd: ");
+#ifdef SYSTEMD
+	fprintf(stderr, "yes");
+#else
+	fprintf(stderr, "no");
+#endif
+
+	fprintf(stderr, ", user: ");
+#ifdef RPCBIND_USER
+	fprintf(stderr, "%s", RPCBIND_USER);
+#else
+	fprintf(stderr, "");
+#endif
+
+	fprintf(stderr, ", warm start: ");
+#ifdef WARMSTART
+	fprintf(stderr, "yes");
+#else
+	fprintf(stderr, "no");
+#endif
+
+	fprintf(stderr, "\n");
+}
 
 int
 main(int argc, char *argv[])
@@ -471,6 +542,8 @@ init_transport(struct netconfig *nconf)
 		nhostsbak = nhosts;
 		nhostsbak++;
 		hosts = realloc(hosts, nhostsbak * sizeof(char *));
+		if (hosts == NULL)
+			errx(1, "Out of memory");
 		if (nhostsbak == 1)
 			hosts[0] = "*";
 		else {
@@ -886,7 +959,7 @@ parseargs(int argc, char *argv[])
 {
 	int c;
 	oldstyle_local = 1;
-	while ((c = getopt(argc, argv, "adh:ilswf")) != -1) {
+	while ((c = getopt(argc, argv, "adfh:ilsvw")) != -1) {
 		switch (c) {
 		case 'a':
 			doabort = 1;	/* when debugging, do an abort on */
@@ -916,13 +989,17 @@ parseargs(int argc, char *argv[])
 		case 'f':
 			dofork = 0;
 			break;
+		case 'v':
+			version();
+			exit(0);
+			break;
 #ifdef WARMSTART
 		case 'w':
 			warmstart = 1;
 			break;
 #endif
 		default:	/* error */
-			fprintf(stderr,	"usage: rpcbind [-adhilswf]\n");
+			fprintf(stderr,	"usage: rpcbind [-adfhilsvw]\n");
 			exit (1);
 		}
 	}
