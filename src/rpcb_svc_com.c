@@ -46,6 +46,7 @@
 #include <bits/poll.h>
 #include <sys/socket.h>
 #include <rpc/rpc.h>
+#include <rpc/rpc_com.h>
 #include <rpc/rpcb_prot.h>
 #include <rpc/svc_dg.h>
 #include <netconfig.h>
@@ -73,6 +74,8 @@
 
 
 static char *nullstring = "";
+
+#ifdef RMTCALLS
 static int rpcb_rmtcalls;
 
 struct rmtcallfd_list {
@@ -119,6 +122,8 @@ static void xprt_set_caller(SVCXPRT *, struct finfo *);
 static void send_svcsyserr(SVCXPRT *, struct finfo *);
 static void handle_reply(int, SVCXPRT *);
 static void find_versions(rpcprog_t, char *, rpcvers_t *, rpcvers_t *);
+#endif /* RMTCALLS */
+
 static rpcblist_ptr find_service(rpcprog_t, rpcvers_t, char *);
 static char *getowner(SVCXPRT *, char *, size_t);
 static int add_pmaplist(RPCB *);
@@ -428,11 +433,12 @@ rpcbproc_taddr2uaddr_com(void *arg, struct svc_req *rqstp /*__unused*/,
 	return (void *)&uaddr;
 }
 
-
+#ifdef RMTCALLS
 static bool_t
 xdr_encap_parms(XDR *xdrs, struct encap_parms *epp)
 {
-	return (xdr_bytes(xdrs, &(epp->args), (u_int *) &(epp->arglen), ~0));
+	return (xdr_bytes(xdrs, &(epp->args), (u_int *) &(epp->arglen), 
+		RPC_MAXDATASIZE));
 }
 
 /*
@@ -1046,12 +1052,15 @@ netbuffree(struct netbuf *ap)
 	free(ap->buf);
 	free(ap);
 }
-
+#endif /* RMTCALLS */
 
 void
 my_svc_run()
 {
-	int poll_ret, check_ret;
+	int poll_ret;
+#ifdef RMTCALLS
+	int check_ret;
+#endif /* RMTCALLS */
 
 	for (;;) {
 	        struct pollfd my_pollfd[svc_max_pollfd];
@@ -1085,14 +1094,19 @@ my_svc_run()
 			 * don't call svc_getreq_poll.  Otherwise, there
 			 * must be another so we must call svc_getreq_poll.
 			 */
+#ifdef RMTCALLS
 			if ((check_ret = check_rmtcalls(my_pollfd, svc_max_pollfd)) ==
 			    poll_ret)
 				continue;
 			svc_getreq_poll(my_pollfd, poll_ret-check_ret);
+#else
+			svc_getreq_poll(my_pollfd, poll_ret);
+#endif /* RMTCALLS */
 		}
 	}
 }
 
+#ifdef RMTCALLS
 static int
 check_rmtcalls(struct pollfd *pfds, int nfds)
 {
@@ -1182,6 +1196,7 @@ handle_reply(int fd, SVCXPRT *xprt)
 	struct r_rmtcall_args a;
 	struct sockaddr_storage ss;
 	socklen_t fromlen;
+	bool_t matched_xid = FALSE;
 
 	buffer = malloc(RPC_BUF_MAX);
 	if (buffer == NULL)
@@ -1220,6 +1235,7 @@ handle_reply(int fd, SVCXPRT *xprt)
 	if (fi == NULL) {
 		goto done;
 	}
+	matched_xid = TRUE;
 	_seterr_reply(&reply_msg, &reply_error);
 	if (reply_error.re_status != RPC_SUCCESS) {
 		if (debugging)
@@ -1257,7 +1273,8 @@ done:
 		xlog(LOG_DEBUG, "handle_reply:  NULL xid on exit!\n");
 	}
 #endif
-	} else
+	}
+	if (matched_xid == TRUE)
 		(void) free_slot_by_xid(reply_msg.rm_xid);
 	return;
 }
@@ -1287,6 +1304,7 @@ find_versions(rpcprog_t prog, char *netid, rpcvers_t *lowvp, rpcvers_t *highvp)
 	*highvp = highv;
 	return;
 }
+#endif /* RMTCALLS */
 
 /*
  * returns the item with the given program, version number and netid.

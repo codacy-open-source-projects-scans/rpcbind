@@ -165,7 +165,8 @@ addrmerge(struct netbuf *caller, char *serv_uaddr, char *clnt_uaddr,
 		ifsa = ifap->ifa_addr;
 		ifmasksa = ifap->ifa_netmask;
 
-		if (ifsa == NULL || ifsa->sa_family != hint_sa->sa_family ||
+		if (ifsa == NULL || ifmasksa == NULL ||
+		    ifsa->sa_family != hint_sa->sa_family ||
 		    !(ifap->ifa_flags & IFF_UP))
 			continue;
 
@@ -328,6 +329,7 @@ network_init()
 
 #ifdef INET6
 	hints.ai_family = AF_INET6;
+	freeaddrinfo(res);
 	if ((ecode = getaddrinfo(NULL, "sunrpc", &hints, &res))) {
 		if (debugging)
 			fprintf(stderr, "can't get local ip6 address: %s\n",
@@ -355,6 +357,7 @@ network_init()
 	if (s < 0) {
 	    if (debugging)
 		    fprintf(stderr, "socket(AF_INET6) failed: %s\n", strerror(errno));
+	    freeifaddrs(ifp);
 	    freeaddrinfo (res);
 	    return;
 	}
@@ -381,6 +384,7 @@ network_init()
 				perror("setsockopt v6 multicast");
 	}
 	close(s);
+	freeifaddrs(ifp);
 #endif
 	freeaddrinfo (res);
 }

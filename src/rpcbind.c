@@ -282,6 +282,7 @@ main(int argc, char *argv[])
 	rpc_control(RPC_SVC_CONNMAXREC_SET, &maxrec);
 
 	init_transport(nconf);
+	freenetconfigent(nconf);
 
 	while ((nconf = getnetconfig(nc_handle))) {
 		if (nconf->nc_flag & NC_VISIBLE)
@@ -893,10 +894,14 @@ got_socket:
 
 	if (res != NULL)
 		freeaddrinfo(res);
+	if (taddr.addr.buf != NULL)
+		free(taddr.addr.buf);
 	return (0);
 error:
 	if (res != NULL)
 		freeaddrinfo(res);
+	if (taddr.addr.buf != NULL)
+		free(taddr.addr.buf);
 	close(fd);
 	return (1);
 }

@@ -122,9 +122,11 @@ rpcb_service_3(struct svc_req *rqstp, SVCXPRT *transp)
 		local = rpcbproc_dump_3_local;
 		break;
 
+#ifdef RMTCALLS
 	case RPCBPROC_CALLIT:
 		rpcbproc_callit_com(rqstp, transp, rqstp->rq_proc, RPCBVERS);
 		return;
+#endif /* RMTCALLS */
 
 	case RPCBPROC_GETTIME:
 #ifdef RPCBIND_DEBUG

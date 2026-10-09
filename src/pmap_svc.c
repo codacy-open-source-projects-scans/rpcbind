@@ -125,6 +125,7 @@ pmap_service(struct svc_req *rqstp, SVCXPRT *xprt)
 		pmapproc_dump(rqstp, xprt);
 		break;
 
+#ifdef RMTCALLS
 	case PMAPPROC_CALLIT:
 		/*
 		 * Calls a procedure on the local machine. If the requested
@@ -135,6 +136,7 @@ pmap_service(struct svc_req *rqstp, SVCXPRT *xprt)
 		 */
 		rpcbproc_callit_com(rqstp, xprt, PMAPPROC_CALLIT, PMAPVERS);
 		break;
+#endif /* RMTCALLS */
 
 	default:
 		svcerr_noproc(xprt);

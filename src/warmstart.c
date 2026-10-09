@@ -205,6 +205,9 @@ read_warmstart()
 				*tail = pos;
 				tail = &pos->rpcb_next;
 			} else {
+				free(pos->rpcb_map.r_netid);
+				free(pos->rpcb_map.r_addr);
+				free(pos->rpcb_map.r_owner);
 				free(pos);
 			}
 		}

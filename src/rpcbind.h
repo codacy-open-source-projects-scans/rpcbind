@@ -89,8 +89,10 @@ void rpcbs_procinfo(rpcvers_t, rpcproc_t);
 void rpcbs_set(rpcvers_t, bool_t);
 void rpcbs_unset(rpcvers_t, bool_t);
 void rpcbs_getaddr(rpcvers_t, rpcprog_t, rpcvers_t, char *, char *);
+#ifdef RMTCALLS
 void rpcbs_rmtcall(rpcvers_t, rpcproc_t, rpcprog_t, rpcvers_t, rpcproc_t,
 			char *, rpcblist_ptr);
+#endif /* RMTCALLS */
 void *rpcbproc_getstat(void *, struct svc_req *, SVCXPRT *, rpcvers_t);
 
 void rpcb_service_3(struct svc_req *, SVCXPRT *);
@@ -110,9 +112,12 @@ void *rpcbproc_uaddr2taddr_com(void *, struct svc_req *,
 					     SVCXPRT *, rpcvers_t);
 void *rpcbproc_taddr2uaddr_com(void *, struct svc_req *, SVCXPRT *,
 				    rpcvers_t);
+#ifdef RMTCALLS
 int create_rmtcall_fd(struct netconfig *);
 void rpcbproc_callit_com(struct svc_req *, SVCXPRT *, rpcvers_t,
 			      rpcvers_t);
+#endif /* RMTCALLS */
+
 void my_svc_run(void);
 
 void rpcbind_abort(void);

@@ -87,6 +87,7 @@ check_access(SVCXPRT *xprt, rpcproc_t proc, rpcprog_t prog, unsigned int rpcbver
 	switch (proc) {
 	case RPCBPROC_SET:
 	case RPCBPROC_UNSET:
+	case RPCBPROC_GETSTAT:
 		if (!insecure && !is_loopback(caller)) {
 #ifdef RPCBIND_DEBUG
 			  if (debugging)
@@ -99,15 +100,16 @@ check_access(SVCXPRT *xprt, rpcproc_t proc, rpcprog_t prog, unsigned int rpcbver
 		}
 		break;
 	case RPCBPROC_GETADDR:
+#ifdef RMTCALLS
 	case RPCBPROC_CALLIT:
 	case RPCBPROC_INDIRECT:
+#endif /* RMTCALLS */
 	case RPCBPROC_DUMP:
 	case RPCBPROC_GETTIME:
 	case RPCBPROC_UADDR2TADDR:
 	case RPCBPROC_TADDR2UADDR:
 	case RPCBPROC_GETVERSADDR:
 	case RPCBPROC_GETADDRLIST:
-	case RPCBPROC_GETSTAT:
 	default:
 		break;
 	}
@@ -290,6 +292,7 @@ logit(int severity, struct sockaddr *addr, rpcproc_t procnum, rpcprog_t prognum,
 	}
 }
 
+#ifdef RMTCALLS
 int
 check_callit(SVCXPRT *xprt, struct r_rmtcall_args *args, int versnum /*__unused*/)
 {
@@ -343,11 +346,14 @@ check_callit(SVCXPRT *xprt, struct r_rmtcall_args *args, int versnum /*__unused*
 	return 1;
 deny:
 #ifdef LIBWRAP
-	logit(deny_severity, sa, args->rmt_proc, args->rmt_prog,
-	    ": indirect call not allowed");
+	if (verboselog)
+		logit(deny_severity, sa, args->rmt_proc, args->rmt_prog,
+		      ": indirect call not allowed");
 #else
-	logit(LOG_AUTH|LOG_WARNING, sa, args->rmt_proc, args->rmt_prog,
-	    ": indirect call not allowed");
+	if (verboselog)
+		logit(LOG_AUTH|LOG_WARNING, sa, args->rmt_proc, args->rmt_prog,
+		      ": indirect call not allowed");
 #endif
 	return 0;
 }
+#endif /* RMTCALLS */

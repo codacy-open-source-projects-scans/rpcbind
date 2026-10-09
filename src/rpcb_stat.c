@@ -50,6 +50,8 @@
 #include <string.h>
 #include "rpcbind.h"
 
+#define MAX_STAT_BUCKETS 4096
+
 static rpcb_stat_byvers inf;
 
 void
@@ -104,8 +106,9 @@ void
 rpcbs_getaddr(rpcvers_t rtype, rpcprog_t prog, rpcvers_t vers, char *netid,
 	      char *uaddr)
 {
-	rpcbs_addrlist *al;
+	rpcbs_addrlist *al, *cut = NULL, *tmp;
 	struct netconfig *nconf;
+	int listlen = 0;
 
 	if (rtype >= RPCBVERS_STAT)
 		return;
@@ -121,6 +124,9 @@ rpcbs_getaddr(rpcvers_t rtype, rpcprog_t prog, rpcvers_t vers, char *netid,
 				al->success++;
 			return;
 		}
+		listlen++;
+		if (listlen == MAX_STAT_BUCKETS - 1)
+			cut = al;
 	}
 	nconf = rpcbind_get_conf(netid);
 	if (nconf == NULL) {
@@ -142,14 +148,26 @@ rpcbs_getaddr(rpcvers_t rtype, rpcprog_t prog, rpcvers_t vers, char *netid,
 	}
 	al->next = inf[rtype].addrinfo;
 	inf[rtype].addrinfo = al;
+
+	if (cut) {
+		al = cut->next;
+		cut->next = NULL;
+		while (al) {
+			tmp = al;
+			al = al->next;
+			free(tmp);
+		}
+	}
 }
 
+#ifdef RMTCALLS
 void
 rpcbs_rmtcall(rpcvers_t rtype, rpcproc_t rpcbproc, rpcprog_t prog,
 	      rpcvers_t vers, rpcproc_t proc, char *netid, rpcblist_ptr rbl)
 {
-	rpcbs_rmtcalllist *rl;
+	rpcbs_rmtcalllist *rl, *cut = NULL, *tmp;
 	struct netconfig *nconf;
+	int listlen = 0;
 
 	if (rtype >= RPCBVERS_STAT)
 		return;
@@ -170,6 +188,9 @@ rpcbs_rmtcall(rpcvers_t rtype, rpcproc_t rpcbproc, rpcprog_t prog,
 				rl->indirect++;
 			return;
 		}
+		listlen++;
+		if (listlen == MAX_STAT_BUCKETS - 1)
+			cut = rl;
 	}
 	nconf = rpcbind_get_conf(netid);
 	if (nconf == NULL) {
@@ -194,8 +215,18 @@ rpcbs_rmtcall(rpcvers_t rtype, rpcproc_t rpcbproc, rpcprog_t prog,
 	rl->indirect = 1;
 	rl->next = inf[rtype].rmtinfo;
 	inf[rtype].rmtinfo = rl;
-	return;
+
+	if (cut) {
+		rl = cut->next;
+		cut->next = NULL;
+		while (rl) {
+			tmp = rl;
+			rl = rl->next;
+			free(tmp);
+		}
+	}
 }
+#endif /* RMTCALLS */
 
 void *
 rpcbproc_getstat(void *arg /*__unused*/, struct svc_req *req /*__unused*/,

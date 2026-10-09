@@ -141,6 +141,7 @@ rpcb_service_4(struct svc_req *rqstp, SVCXPRT *transp)
 		local = rpcbproc_dump_4_local;
 		break;
 
+#ifdef RMTCALLS
 	case RPCBPROC_INDIRECT:
 #ifdef RPCBIND_DEBUG
 		if (debugging)
@@ -157,6 +158,7 @@ rpcb_service_4(struct svc_req *rqstp, SVCXPRT *transp)
 #endif
 		rpcbproc_callit_com(rqstp, transp, rqstp->rq_proc, RPCBVERS4);
 		return;
+#endif /* RMTCALLS */
 
 	case RPCBPROC_GETTIME:
 #ifdef RPCBIND_DEBUG

@@ -958,17 +958,19 @@ rpcbdump (
       for (rs = rs_head; rs; rs = rs->next)
 	{
 	  size_t netidmax = sizeof(buf) - 1;
-	  char *p = buf;
+	  int l = 0;
 
 	  printf ("%10ld  ", rs->prog);
 	  for (vl = rs->vlist; vl; vl = vl->next)
 	    {
-	      sprintf (p, "%d", vl->vers);
-	      p = p + strlen (p);
+	      l += printf ("%d", vl->vers);
 	      if (vl->next)
-		sprintf (p++, ",");
+		l += printf (",");
 	    }
-	  printf ("%-10s", buf);
+	  if (l < 10)
+	    printf("%*s", 10 - l, " ");
+	  else
+	    printf(" ");
 	  buf[0] = '\0';
 
           for (nl = rs->nlist; nl; nl = nl->next)
@@ -1104,7 +1106,7 @@ rpcbaddrlist (
 
 	  re = &head->rpcb_entry_map;
 	  printf ("%10u%3u    ", parms.r_prog, parms.r_vers);
-	  sprintf (buf, "%s/%s/%s ",
+	  snprintf (buf, sizeof(buf), "%s/%s/%s ",
 		   re->r_nc_protofmly, re->r_nc_proto,
 		   re->r_nc_semantics == NC_TPI_CLTS ? "clts" :
 		   re->r_nc_semantics == NC_TPI_COTS ? "cots" : "cots_ord");
